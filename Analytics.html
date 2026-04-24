@@ -1,0 +1,1086 @@
+<!doctype html>
+<html lang="vi" class="h-full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UpScale – Grow · Analyze · Scale</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{fontFamily:{main:['"Be Vietnam Pro"','sans-serif']},colors:{brand:'#060d1a',accent:'#2563eb',surface:'#0d1f3c',card:'#132847',success:'#22c55e',warn:'#f59e0b',danger:'#ef4444'}}}}
+</script>
+<style>
+*{font-family:'Be Vietnam Pro',sans-serif;margin:0;padding:0;box-sizing:border-box}
+html{width:100%;height:100%}
+body{width:100vw;height:100vh;overflow:hidden}
+#loginScreen{position:fixed;inset:0;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
+#mainApp{position:fixed;inset:0;width:100vw;height:100vh;display:none}
+#appShell{display:flex;width:100%;height:100%}
+#sidebar{width:240px;min-width:240px;height:100%;display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;background:#080f22}
+#mainCol{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;overflow:hidden;background:#060d1a}
+#pageContent{flex:1;overflow-y:auto;padding:20px}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0d1f3c}::-webkit-scrollbar-thumb{background:#1e4080;border-radius:3px}
+.sidebar-item{transition:all .2s}
+.sidebar-item:hover,.sidebar-item.active{background:rgba(37,99,235,.18);color:#60a5fa}
+.card-stat{transition:transform .2s,box-shadow .2s}.card-stat:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(37,99,235,.25)}
+.fade-in{animation:fadeIn .3s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);transition:all .2s}.btn-primary:hover{background:linear-gradient(135deg,#1d4ed8,#1e40af);transform:translateY(-1px);box-shadow:0 4px 15px rgba(37,99,235,.4)}
+.modal-overlay{background:rgba(0,0,0,.7);backdrop-filter:blur(6px)}
+input,select,textarea{background:#0d1f3c;border:1px solid #1e3a6e;color:#e2e8f0;border-radius:8px;padding:8px 12px;outline:none;transition:border .2s}
+input:focus,select:focus,textarea:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+table{width:100%}th{background:#0a1929;text-align:left;padding:10px 12px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#64748b}
+td{padding:10px 12px;border-bottom:1px solid #0d1f3c;font-size:13px;color:#cbd5e1}
+tr:hover td{background:rgba(37,99,235,.06)}
+.badge{padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.toast{position:fixed;top:20px;right:20px;z-index:9999;padding:12px 20px;border-radius:10px;color:#fff;font-size:13px;animation:slideIn .3s ease,fadeOut .3s ease 2.7s forwards;box-shadow:0 8px 25px rgba(0,0,0,.3)}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes fadeOut{to{opacity:0;transform:translateY(-10px)}}
+.login-bg{background:radial-gradient(ellipse at 30% 40%,#0a2560 0%,#060d1a 60%),linear-gradient(135deg,#060d1a,#091428)}
+.pulse-dot{width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.logo-svg text{font-family:'Be Vietnam Pro',sans-serif}
+.glow{box-shadow:0 0 20px rgba(37,99,235,.3)}
+canvas{display:block}
+</style>
+</head>
+<body class="h-full text-gray-200" style="background:#060d1a">
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-bg h-full flex items-center justify-center">
+  <div class="w-full max-w-md p-8 fade-in">
+    <div class="text-center mb-8">
+      <!-- UpScale Logo SVG inline -->
+      <div class="flex justify-center mb-4">
+        <svg width="220" height="70" viewBox="0 0 220 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#00b4ff"/>
+              <stop offset="100%" stop-color="#1d4ed8"/>
+            </linearGradient>
+          </defs>
+          <!-- U shape with chart bars inside -->
+          <path d="M8 10 L8 42 Q8 58 24 58 Q40 58 40 42 L40 10" stroke="url(#grad1)" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <!-- mini bars inside U -->
+          <rect x="14" y="44" width="4" height="8" rx="1" fill="url(#grad1)" opacity="0.8"/>
+          <rect x="20" y="38" width="4" height="14" rx="1" fill="url(#grad1)"/>
+          <rect x="26" y="32" width="4" height="20" rx="1" fill="url(#grad1)"/>
+          <!-- p with upward arrow -->
+          <path d="M46 58 L46 22" stroke="url(#grad1)" stroke-width="5" stroke-linecap="round"/>
+          <path d="M46 22 Q46 12 58 12 Q70 12 70 22 Q70 32 58 32 L46 32" stroke="url(#grad1)" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <!-- Arrow up-right -->
+          <path d="M68 14 L80 4" stroke="url(#grad1)" stroke-width="5" stroke-linecap="round"/>
+          <path d="M73 4 L80 4 L80 11" stroke="url(#grad1)" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Scale text -->
+          <text x="92" y="48" font-size="36" font-weight="800" fill="white" font-family="'Be Vietnam Pro',sans-serif">Scale</text>
+          <!-- Tagline -->
+          <text x="92" y="62" font-size="9" fill="#60a5fa" font-weight="500" letter-spacing="3" font-family="'Be Vietnam Pro',sans-serif">GROW · ANALYZE · SCALE</text>
+        </svg>
+      </div>
+      <p class="text-gray-400 text-sm">Hệ thống phân tích doanh thu &amp; dự báo bán hàng</p>
+    </div>
+    <div class="rounded-2xl p-6 shadow-2xl border border-blue-900/40 glow" style="background:#0d1f3c">
+      <div class="mb-4">
+        <label class="block text-xs font-medium text-gray-400 mb-1">Tên đăng nhập</label>
+        <input id="loginUser" type="text" class="w-full" placeholder="admin" value="admin">
+      </div>
+      <div class="mb-4">
+        <label class="block text-xs font-medium text-gray-400 mb-1">Mật khẩu</label>
+        <input id="loginPass" type="password" class="w-full" placeholder="••••••" value="123456">
+      </div>
+      <label class="flex items-center gap-2 mb-4 text-sm text-gray-400 cursor-pointer">
+        <input type="checkbox" checked class="accent-blue-500"> Nhớ mật khẩu
+      </label>
+      <button onclick="doLogin()" class="btn-primary w-full py-3 rounded-xl text-white font-semibold text-sm">Đăng nhập</button>
+      <div id="loginError" class="text-red-400 text-xs mt-3 text-center hidden">Sai tài khoản hoặc mật khẩu</div>
+      <div class="mt-4 text-center text-xs text-gray-600">Demo: admin / 123456 (Admin) • nv / 123456 (Nhân viên)</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+  <div id="appShell">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="border-r border-blue-900/40">
+      <div class="p-4 border-b border-blue-900/40">
+        <svg width="150" height="48" viewBox="0 0 150 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sg1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="100%" stop-color="#2563eb"/>
+            </linearGradient>
+          </defs>
+          <path d="M4 6 L4 28 Q4 38 14 38 Q24 38 24 28 L24 6" stroke="url(#sg1)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <rect x="7" y="28" width="2.5" height="6" rx="0.5" fill="url(#sg1)" opacity="0.8"/>
+          <rect x="11" y="24" width="2.5" height="10" rx="0.5" fill="url(#sg1)"/>
+          <rect x="15" y="20" width="2.5" height="14" rx="0.5" fill="url(#sg1)"/>
+          <path d="M28 38 L28 14" stroke="url(#sg1)" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M28 14 Q28 6 36 6 Q44 6 44 14 Q44 22 36 22 L28 22" stroke="url(#sg1)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <path d="M42 8 L50 2" stroke="url(#sg1)" stroke-width="3.2" stroke-linecap="round"/>
+          <path d="M46 2 L50 2 L50 6" stroke="url(#sg1)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="58" y="30" font-size="22" font-weight="800" fill="white" font-family="'Be Vietnam Pro',sans-serif">Scale</text>
+        </svg>
+        <div class="text-[10px] text-blue-400/60 mt-0.5 pl-0.5">v2.0 · GROW · ANALYZE</div>
+      </div>
+      <nav class="flex-1 p-3 space-y-0.5" id="sidebarNav"></nav>
+      <div class="p-3 border-t border-blue-900/40">
+        <div class="flex items-center gap-2 p-2">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style="background:linear-gradient(135deg,#2563eb,#1e40af)" id="avatarLetter">A</div>
+          <div>
+            <div class="text-xs font-medium text-white" id="currentUser">Admin</div>
+            <div class="text-[10px] text-blue-400/60" id="currentRole">Quản trị viên</div>
+          </div>
+        </div>
+        <button onclick="logout()" class="w-full mt-2 py-2 text-xs text-gray-500 hover:text-red-400 flex items-center justify-center gap-1 rounded-lg hover:bg-red-900/10 transition">
+          <i data-lucide="log-out" class="w-3 h-3"></i> Đăng xuất
+        </button>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main id="mainCol">
+      <header class="border-b border-blue-900/30 px-6 py-3 flex items-center justify-between" style="background:#080f22;flex-shrink:0">
+        <div class="flex items-center gap-3">
+          <h2 class="text-base font-bold text-white" id="pageTitle">Dashboard</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <input type="text" placeholder="Tìm kiếm..." class="text-xs py-2 px-3 pl-8 w-44 rounded-lg">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-gray-500"></i>
+          </div>
+          <button class="relative p-2 rounded-lg transition hover:bg-blue-900/20">
+            <i data-lucide="bell" class="w-4 h-4 text-gray-400"></i>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
+        </div>
+      </header>
+      <div id="pageContent"></div>
+    </main>
+  </div>
+</div>
+
+<script>
+// ===== DATABASE-ALIGNED DATA STRUCTURES =====
+
+// users table
+const USERS_DB = {
+  admin: {id:1, username:'admin', password:'123456', role:'admin', roleName:'Quản trị viên'},
+  ql:    {id:2, username:'ql',    password:'123456', role:'manager', roleName:'Quản lý'},
+  nv:    {id:3, username:'nv',    password:'123456', role:'staff', roleName:'Nhân viên'},
+};
+
+// staff table
+let STAFF_DB = [
+  {id:1, user_id:1, name:'Admin',           email:'admin@upscale.vn',  branch:'HCM', active:true,  role:'Admin'},
+  {id:2, user_id:2, name:'Quản Lý',email:'ql@upscale.vn',     branch:'HCM', active:true,  role:'Quản lý'},
+  {id:3, user_id:3, name:'Nhân Viên', email:'nv@upscale.vn',    branch:'HN',  active:true,  role:'Nhân viên'},
+  {id:4, user_id:null, name:'Hồ Như Ý',      email:'hny@upscale.vn',   branch:'HCM', active:false, role:'Nhân viên'},
+];
+
+// categories table
+let CATEGORIES_DB = [
+  {id:1, name:'Điện thoại', description:'Smartphone các loại',   status:true},
+  {id:2, name:'Laptop',     description:'Máy tính xách tay',     status:true},
+  {id:3, name:'Tablet',     description:'Máy tính bảng',         status:true},
+  {id:4, name:'Phụ kiện',   description:'Tai nghe, sạc, ốp lưng',status:true},
+  {id:5, name:'Đồng hồ',    description:'Smartwatch',            status:false},
+];
+
+// products table
+let PRODUCTS_DB = [
+  {id:1, name:'iPhone 15 Pro Max',   category_id:1, price_in:28000000, price_out:34990000, stock:45, status:true},
+  {id:2, name:'Samsung Galaxy S24',  category_id:1, price_in:22000000, price_out:27990000, stock:32, status:true},
+  {id:3, name:'MacBook Air M3',      category_id:2, price_in:27000000, price_out:32990000, stock:18, status:true},
+  {id:4, name:'iPad Pro 12.9"',      category_id:3, price_in:24000000, price_out:29990000, stock:8,  status:true},
+  {id:5, name:'AirPods Pro 2',       category_id:4, price_in:4500000,  price_out:6790000,  stock:3,  status:true},
+  {id:6, name:'Apple Watch Ultra',   category_id:5, price_in:18000000, price_out:22990000, stock:12, status:true},
+  {id:7, name:'Dell XPS 15',         category_id:2, price_in:32000000, price_out:38990000, stock:5,  status:false},
+];
+
+// customers table
+let CUSTOMERS_DB = [
+  {id:1, name:'Phạm Minh Tuấn',  phone:'0901234567', email:'tuan@gmail.com', address:'Q1, HCM',       total_orders:15, total_spent:245000000, is_vip:true},
+  {id:2, name:'Nguyễn Thị Lan',  phone:'0912345678', email:'lan@gmail.com',  address:'Q3, HCM',       total_orders:8,  total_spent:89000000,  is_vip:false},
+  {id:3, name:'Trần Văn Hùng',   phone:'0923456789', email:'hung@gmail.com', address:'Cầu Giấy, HN',  total_orders:22, total_spent:520000000, is_vip:true},
+  {id:4, name:'Lê Thị Mai',      phone:'0934567890', email:'mai@gmail.com',  address:'Q7, HCM',       total_orders:5,  total_spent:42000000,  is_vip:false},
+];
+
+// orders + order_items tables
+let ORDERS_DB = [
+  {id:1, order_code:'DH001', customer_id:1, staff_id:3, order_date:'2025-01-15', discount:0,  status:'done',    total_amount:34990000,
+   items:[{product_id:1, quantity:1, price:34990000}]},
+  {id:2, order_code:'DH002', customer_id:2, staff_id:3, order_date:'2025-01-16', discount:5,  status:'done',    total_amount:12901000,
+   items:[{product_id:5, quantity:2, price:6790000}]},
+  {id:3, order_code:'DH003', customer_id:3, staff_id:2, order_date:'2025-01-17', discount:3,  status:'pending', total_amount:38620300,
+   items:[{product_id:3, quantity:1, price:32990000},{product_id:5, quantity:1, price:6790000}]},
+  {id:4, order_code:'DH004', customer_id:4, staff_id:3, order_date:'2025-01-18', discount:0,  status:'cancel',  total_amount:27990000,
+   items:[{product_id:2, quantity:1, price:27990000}]},
+];
+
+// sales_summary (monthly aggregation)
+const SALES_SUMMARY = [
+  {month:1,  revenue:185e6, quantity:52},
+  {month:2,  revenue:210e6, quantity:61},
+  {month:3,  revenue:195e6, quantity:55},
+  {month:4,  revenue:230e6, quantity:68},
+  {month:5,  revenue:245e6, quantity:72},
+  {month:6,  revenue:280e6, quantity:83},
+  {month:7,  revenue:310e6, quantity:94},
+  {month:8,  revenue:295e6, quantity:88},
+  {month:9,  revenue:340e6, quantity:103},
+  {month:10, revenue:365e6, quantity:111},
+  {month:11, revenue:320e6, quantity:97},
+  {month:12, revenue:390e6, quantity:121},
+];
+
+// forecast_results
+const FORECAST_RESULTS = [
+  {month:1,  revenue:410e6, quantity:128, model_name:'LSTM'},
+  {month:2,  revenue:435e6, quantity:136, model_name:'LSTM'},
+  {month:3,  revenue:460e6, quantity:145, model_name:'LSTM'},
+];
+
+// inventory_logs
+let INVENTORY_LOGS = [
+  {id:1, product_id:1, staff_id:1, type:'import', quantity:20, note:'Nhập từ NCC Apple',   created_at:'2025-01-18'},
+  {id:2, product_id:5, staff_id:3, type:'export', quantity:5,  note:'Bán hàng',            created_at:'2025-01-17'},
+  {id:3, product_id:2, staff_id:1, type:'import', quantity:15, note:'Nhập từ NCC Samsung', created_at:'2025-01-16'},
+  {id:4, product_id:3, staff_id:3, type:'export', quantity:3,  note:'Bán hàng',            created_at:'2025-01-15'},
+];
+
+let currentUserData = null, currentPage = 'dashboard';
+let idCounters = {users:4, staff:5, categories:6, products:8, customers:5, orders:5};
+
+const MENU = [
+  {id:'dashboard',  icon:'layout-dashboard', label:'Dashboard'},
+  {id:'products',   icon:'package',          label:'Sản phẩm'},
+  {id:'categories', icon:'layers',           label:'Danh mục'},
+  {id:'customers',  icon:'users',            label:'Khách hàng'},
+  {id:'orders',     icon:'shopping-cart',    label:'Đơn hàng'},
+  {id:'warehouse',  icon:'warehouse',        label:'Kho hàng'},
+  {id:'revenue',    icon:'trending-up',      label:'Phân tích Doanh thu'},
+  {id:'forecast',   icon:'brain',            label:'Dự báo AI'},
+  {id:'staff',      icon:'user-cog',         label:'Nhân viên'},
+  {id:'accounts',   icon:'shield',           label:'Tài khoản'},
+  {id:'settings',   icon:'settings',         label:'Cài đặt'},
+];
+
+function fmt(n){return new Intl.NumberFormat('vi-VN').format(n)}
+function fmtM(n){return n>=1e9?(n/1e9).toFixed(1)+'B':(n>=1e6?(n/1e6).toFixed(0)+'M':fmt(n))}
+function showToast(msg,type='success'){
+  const t=document.createElement('div');
+  t.className=`toast ${type==='success'?'bg-blue-600':'bg-red-600'}`;
+  t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+}
+function getCatName(id){return CATEGORIES_DB.find(c=>c.id===id)?.name||'—'}
+function getCustomerName(id){return CUSTOMERS_DB.find(c=>c.id===id)?.name||'—'}
+function getStaffName(id){return STAFF_DB.find(s=>s.id===id)?.name||'—'}
+function getProductName(id){return PRODUCTS_DB.find(p=>p.id===id)?.name||'—'}
+function nextId(key){return ++idCounters[key]}
+
+// ===== LOGIN =====
+function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const user=USERS_DB[u];
+  if(user&&user.password===p){
+    currentUserData={...user};
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('mainApp').style.display='flex';
+    document.getElementById('currentUser').textContent=user.username==='admin'?'Admin':(STAFF_DB.find(s=>s.user_id===user.id)?.name||user.username);
+    document.getElementById('currentRole').textContent=user.roleName;
+    document.getElementById('avatarLetter').textContent=(document.getElementById('currentUser').textContent[0]||'A').toUpperCase();
+    buildSidebar();navigateTo('dashboard');
+    showToast('Đăng nhập thành công!');
+  } else {
+    document.getElementById('loginError').classList.remove('hidden');
+  }
+}
+function logout(){
+  document.getElementById('mainApp').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  currentUserData=null;
+}
+
+function buildSidebar(){
+  const nav=document.getElementById('sidebarNav');nav.innerHTML='';
+  MENU.forEach(m=>{
+    if(m.id==='accounts'&&currentUserData.role!=='admin')return;
+    const a=document.createElement('a');a.href='#';
+    a.className=`sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 ${currentPage===m.id?'active':''}`;
+    a.innerHTML=`<i data-lucide="${m.icon}" class="w-4 h-4"></i>${m.label}`;
+    a.onclick=e=>{e.preventDefault();navigateTo(m.id)};
+    nav.appendChild(a);
+  });
+  lucide.createIcons();
+}
+
+function navigateTo(page){
+  currentPage=page;buildSidebar();
+  document.getElementById('pageTitle').textContent=MENU.find(m=>m.id===page)?.label||page;
+  const c=document.getElementById('pageContent');
+  const renderers={dashboard:renderDashboard,products:renderProducts,categories:renderCategories,
+    customers:renderCustomers,orders:renderOrders,warehouse:renderWarehouse,
+    revenue:renderRevenue,forecast:renderForecast,staff:renderStaff,accounts:renderAccounts,settings:renderSettings};
+  (renderers[page]||renderDashboard)(c);lucide.createIcons();
+}
+
+// ===== CHART HELPERS =====
+function drawBarChart(canvasId, labels, datasets, opts={}){
+  requestAnimationFrame(()=>{
+    const canvas=document.getElementById(canvasId);
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width, H=canvas.height;
+    const pad={top:30,right:20,bottom:40,left:65};
+    const chartW=W-pad.left-pad.right, chartH=H-pad.top-pad.bottom;
+    ctx.clearRect(0,0,W,H);
+
+    // find max
+    const allVals=datasets.flatMap(d=>d.data);
+    const maxV=Math.max(...allVals)*1.1||1;
+
+    // grid lines
+    const gridN=5;
+    for(let i=0;i<=gridN;i++){
+      const y=pad.top+chartH-(i/gridN)*chartH;
+      ctx.beginPath();ctx.strokeStyle='rgba(30,64,128,0.5)';ctx.lineWidth=1;
+      ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+chartW,y);ctx.stroke();
+      const val=(maxV*i/gridN);
+      ctx.fillStyle='#4b6a9b';ctx.font='10px Be Vietnam Pro';ctx.textAlign='right';
+      ctx.fillText(val>=1e6?(val/1e6).toFixed(0)+'M':val.toFixed(0),pad.left-6,y+3);
+    }
+
+    // bars
+    const barGroupW=chartW/labels.length;
+    const totalBars=datasets.length;
+    const barW=Math.min((barGroupW/(totalBars+1))*0.85,32);
+
+    datasets.forEach((ds,di)=>{
+      ds.data.forEach((v,i)=>{
+        const bh=(v/maxV)*chartH;
+        const x=pad.left+i*barGroupW+(barGroupW/(totalBars+1))*(di+0.5)+barW*(di-totalBars/2+0.5);
+        const y=pad.top+chartH-bh;
+        // gradient
+        const grd=ctx.createLinearGradient(0,y,0,y+bh);
+        const c1=ds.color||'#2563eb',c2=ds.colorEnd||'#1e3a8a';
+        grd.addColorStop(0,c1);grd.addColorStop(1,c2);
+        ctx.fillStyle=grd;
+        // rounded top
+        const r=Math.min(4,bh/2);
+        ctx.beginPath();
+        ctx.moveTo(x,y+r);ctx.lineTo(x,y+bh);ctx.lineTo(x+barW,y+bh);ctx.lineTo(x+barW,y+r);
+        ctx.quadraticCurveTo(x+barW,y,x+barW-r,y);ctx.lineTo(x+r,y);
+        ctx.quadraticCurveTo(x,y,x,y+r);ctx.fill();
+        // value label on top
+        if(bh>18){
+          ctx.fillStyle='#93c5fd';ctx.font='9px Be Vietnam Pro';ctx.textAlign='center';
+          const lbl=v>=1e6?(v/1e6).toFixed(0)+'M':v+'';
+          ctx.fillText(lbl,x+barW/2,y-4);
+        }
+      });
+    });
+
+    // x labels
+    labels.forEach((lbl,i)=>{
+      const x=pad.left+i*barGroupW+barGroupW/2;
+      ctx.fillStyle='#64748b';ctx.font='10px Be Vietnam Pro';ctx.textAlign='center';
+      ctx.fillText(lbl,x,pad.top+chartH+16);
+    });
+
+    // legend
+    if(opts.legend&&datasets.length>1){
+      let lx=pad.left;
+      datasets.forEach(ds=>{
+        ctx.fillStyle=ds.color;ctx.fillRect(lx,pad.top+chartH+28,12,8);
+        ctx.fillStyle='#94a3b8';ctx.font='10px Be Vietnam Pro';ctx.textAlign='left';
+        ctx.fillText(ds.label,lx+15,pad.top+chartH+36);lx+=ds.label.length*7+25;
+      });
+    }
+  });
+}
+
+function drawLineChart(canvasId, labels, datasets){
+  requestAnimationFrame(()=>{
+    const canvas=document.getElementById(canvasId);
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width, H=canvas.height;
+    const pad={top:30,right:20,bottom:50,left:65};
+    const chartW=W-pad.left-pad.right, chartH=H-pad.top-pad.bottom;
+    ctx.clearRect(0,0,W,H);
+    const allVals=datasets.flatMap(d=>d.data.filter(v=>v!==null));
+    const maxV=Math.max(...allVals)*1.1||1;
+    const minV=0;
+
+    for(let i=0;i<=5;i++){
+      const y=pad.top+chartH-(i/5)*chartH;
+      ctx.beginPath();ctx.strokeStyle='rgba(30,64,128,0.4)';ctx.lineWidth=1;
+      ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+chartW,y);ctx.stroke();
+      const val=((maxV-minV)*i/5);
+      ctx.fillStyle='#4b6a9b';ctx.font='10px Be Vietnam Pro';ctx.textAlign='right';
+      ctx.fillText(val>=1e6?(val/1e6).toFixed(0)+'M':val.toFixed(0),pad.left-6,y+3);
+    }
+
+    datasets.forEach(ds=>{
+      const pts=[];
+      ds.data.forEach((v,i)=>{
+        if(v===null)return;
+        const x=pad.left+(i/(labels.length-1))*chartW;
+        const y=pad.top+chartH-((v-minV)/(maxV-minV))*chartH;
+        pts.push({x,y,i,v});
+      });
+      // fill area
+      if(pts.length>1){
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x,pad.top+chartH);
+        pts.forEach(p=>ctx.lineTo(p.x,p.y));
+        ctx.lineTo(pts[pts.length-1].x,pad.top+chartH);
+        ctx.closePath();
+        ctx.fillStyle=ds.fill||'rgba(37,99,235,0.1)';ctx.fill();
+      }
+      // line
+      ctx.beginPath();ctx.strokeStyle=ds.color||'#3b82f6';ctx.lineWidth=2.5;ctx.lineJoin='round';
+      if(ds.dashed)ctx.setLineDash([6,4]);else ctx.setLineDash([]);
+      pts.forEach((p,j)=>{if(j===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y)});
+      ctx.stroke();ctx.setLineDash([]);
+      // dots
+      pts.forEach(p=>{
+        ctx.beginPath();ctx.arc(p.x,p.y,3.5,0,Math.PI*2);
+        ctx.fillStyle=ds.color||'#3b82f6';ctx.fill();
+        ctx.strokeStyle='#060d1a';ctx.lineWidth=1.5;ctx.stroke();
+      });
+    });
+
+    // x labels
+    labels.forEach((lbl,i)=>{
+      const x=pad.left+(i/(labels.length-1))*chartW;
+      ctx.fillStyle=i>=12?'#34d399':'#64748b';
+      ctx.font=`${i>=12?'bold ':''}10px Be Vietnam Pro`;ctx.textAlign='center';
+      ctx.fillText(lbl,x,pad.top+chartH+16);
+    });
+
+    // legend
+    const lgs=datasets;
+    let lx=pad.left;
+    lgs.forEach(ds=>{
+      if(ds.dashed){ctx.setLineDash([5,3]);ctx.strokeStyle=ds.color;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(lx,pad.top+chartH+34);ctx.lineTo(lx+14,pad.top+chartH+34);ctx.stroke();ctx.setLineDash([])}
+      else{ctx.fillStyle=ds.color;ctx.fillRect(lx,pad.top+chartH+28,14,6)}
+      ctx.fillStyle='#94a3b8';ctx.font='10px Be Vietnam Pro';ctx.textAlign='left';
+      ctx.fillText(ds.label,lx+18,pad.top+chartH+36);lx+=ds.label.length*7+30;
+    });
+  });
+}
+
+// ===== DASHBOARD =====
+function renderDashboard(c){
+  const totalRev=SALES_SUMMARY.reduce((s,m)=>s+m.revenue,0);
+  const lowStock=PRODUCTS_DB.filter(p=>p.stock<=5&&p.status).length;
+  c.innerHTML=`<div class="fade-in space-y-5">
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+${statCard('💰','DT năm 2025',fmtM(totalRev)+'đ','+18.5% YoY','text-blue-400')}
+${statCard('📊','DT tháng 12',fmtM(390e6)+'đ','+21.9% vs T11','text-green-400')}
+${statCard('📦','Tổng đơn',ORDERS_DB.length+'','+'+ORDERS_DB.filter(o=>o.status==='done').length+' hoàn thành','text-blue-300')}
+${statCard('👥','Khách hàng',CUSTOMERS_DB.length+'',CUSTOMERS_DB.filter(c=>c.is_vip).length+' VIP','text-amber-400')}
+${statCard('⚠️','Tồn thấp',lowStock+'','Cần nhập thêm','text-red-400')}
+</div>
+<div class="grid lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-2 rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+    <h3 class="text-sm font-semibold text-white mb-1">Doanh thu 12 tháng (triệu VNĐ)</h3>
+    <p class="text-[10px] text-blue-400/60 mb-3">Năm 2025</p>
+    <canvas id="dashChart" width="620" height="200" style="width:100%;max-width:620px;height:200px"></canvas>
+  </div>
+  <div class="space-y-4">
+    <div class="rounded-2xl p-4 border border-blue-900/30" style="background:#0d1f3c">
+      <h3 class="text-sm font-semibold text-white mb-3">Top sản phẩm bán chạy</h3>
+      ${[{n:'iPhone 15 Pro Max',v:85},{n:'Samsung Galaxy S24',v:62},{n:'MacBook Air M3',v:45},{n:'AirPods Pro 2',v:38},{n:'iPad Pro',v:28}].map((p,i)=>`<div class="flex items-center gap-2 mb-2"><span class="text-xs text-gray-500 w-4">${i+1}</span><div class="flex-1"><div class="flex justify-between text-xs mb-1"><span class="text-gray-300 truncate">${p.n}</span><span class="text-blue-400 ml-2">${p.v}</span></div><div class="h-1.5 bg-blue-950 rounded-full"><div class="h-full bg-blue-500 rounded-full" style="width:${p.v}%"></div></div></div></div>`).join('')}
+    </div>
+    <div class="rounded-2xl p-4 border border-blue-900/30" style="background:#0d1f3c">
+      <h3 class="text-sm font-semibold text-white mb-3">Tỷ lệ danh mục</h3>
+      ${[{n:'Điện thoại',v:42,c:'bg-blue-500'},{n:'Laptop',v:28,c:'bg-emerald-500'},{n:'Phụ kiện',v:18,c:'bg-amber-500'},{n:'Khác',v:12,c:'bg-purple-500'}].map(d=>`<div class="flex items-center gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full ${d.c}"></div><span class="text-xs text-gray-400 flex-1">${d.n}</span><span class="text-xs font-semibold text-white">${d.v}%</span></div>`).join('')}
+    </div>
+  </div>
+</div></div>`;
+  // draw chart
+  const MONTHS=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+  setTimeout(()=>{
+    const canvas=document.getElementById('dashChart');
+    if(canvas){canvas.width=canvas.offsetWidth*window.devicePixelRatio||620;canvas.height=200*window.devicePixelRatio||200;canvas.style.height='200px';}
+    drawBarChart('dashChart',MONTHS,[{
+      label:'Doanh thu',
+      data:SALES_SUMMARY.map(m=>m.revenue),
+      color:'#3b82f6',colorEnd:'#1e3a8a'
+    }],{});
+  },50);
+}
+
+function statCard(icon,label,value,sub,subColor){
+  return`<div class="card-stat rounded-2xl p-4 border border-blue-900/30" style="background:#0d1f3c"><div class="text-2xl mb-2">${icon}</div><div class="text-[11px] text-gray-500 mb-1">${label}</div><div class="text-base font-bold text-white">${value}</div><div class="text-[10px] ${subColor} mt-1">${sub}</div></div>`
+}
+
+// ===== PRODUCTS =====
+function renderProducts(c){
+  c.innerHTML=`<div class="fade-in space-y-4">
+<div class="flex flex-wrap items-center justify-between gap-3">
+<div class="flex gap-2">
+  <input type="text" id="prodSearch" placeholder="Tìm sản phẩm..." class="text-xs py-2 px-3 w-44 rounded-lg" oninput="renderProductRows()">
+  <select class="text-xs py-2 px-3 rounded-lg" onchange="renderProductRows()" id="prodCatFilter">
+    <option value="">Tất cả</option>
+    ${CATEGORIES_DB.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}
+  </select>
+</div>
+<button class="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white flex items-center gap-1" onclick="showProductModal()">
+  <i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm SP
+</button>
+</div>
+<div class="rounded-2xl border border-blue-900/30 overflow-hidden" style="background:#0d1f3c">
+<div class="overflow-x-auto">
+<table id="prodTable">
+  <thead><tr><th>Mã SP</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Giá nhập</th><th>Giá bán</th><th>Lợi nhuận</th><th>Tồn kho</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+  <tbody id="prodBody"></tbody>
+</table></div></div></div>`;
+  renderProductRows();lucide.createIcons();
+}
+function renderProductRows(){
+  const s=(document.getElementById('prodSearch')?.value||'').toLowerCase();
+  const catId=document.getElementById('prodCatFilter')?.value||'';
+  const filtered=PRODUCTS_DB.filter(p=>
+    (p.name.toLowerCase().includes(s)||('SP'+p.id).includes(s))&&
+    (!catId||p.category_id==catId)
+  );
+  document.getElementById('prodBody').innerHTML=filtered.map(p=>{
+    const profit=p.price_out-p.price_in;
+    const pct=((profit/p.price_in)*100).toFixed(0);
+    return`<tr>
+<td class="font-mono text-xs">SP${String(p.id).padStart(3,'0')}</td>
+<td><span class="font-medium text-white text-xs">${p.name}</span></td>
+<td><span class="badge bg-blue-900/40 text-blue-300">${getCatName(p.category_id)}</span></td>
+<td class="text-xs">${fmtM(p.price_in)}đ</td>
+<td class="text-xs font-semibold text-white">${fmtM(p.price_out)}đ</td>
+<td class="text-xs text-green-400">+${pct}%</td>
+<td><span class="${p.stock<=5?'text-red-400 font-bold':'text-gray-300'} text-xs">${p.stock}</span></td>
+<td><span class="badge ${p.status?'bg-green-900/40 text-green-400':'bg-gray-700/40 text-gray-500'}">${p.status?'Đang bán':'Ngừng'}</span></td>
+<td><div class="flex gap-1">
+  <button class="p-1.5 hover:bg-blue-900/30 rounded-lg" onclick="showProductModal(${p.id})"><i data-lucide="edit" class="w-3.5 h-3.5 text-blue-400"></i></button>
+  <button class="p-1.5 hover:bg-red-900/20 rounded-lg" onclick="deleteProduct(${p.id})"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i></button>
+</div></td></tr>`}).join('');
+  lucide.createIcons();
+}
+function showProductModal(editId){
+  const p=editId?PRODUCTS_DB.find(x=>x.id===editId):null;
+  showModal(editId?'Sửa sản phẩm':'Thêm sản phẩm',`
+<div class="grid grid-cols-2 gap-3">
+<div class="col-span-2"><label class="block text-xs text-gray-400 mb-1">Tên sản phẩm</label><input id="mName" value="${p?.name||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Danh mục</label><select id="mCat" class="w-full text-xs">${CATEGORIES_DB.filter(c=>c.status).map(c=>`<option value="${c.id}" ${p?.category_id===c.id?'selected':''}>${c.name}</option>`).join('')}</select></div>
+<div><label class="block text-xs text-gray-400 mb-1">Tồn kho</label><input id="mStock" type="number" value="${p?.stock||0}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Giá nhập (đ)</label><input id="mPIn" type="number" value="${p?.price_in||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Giá bán (đ)</label><input id="mPOut" type="number" value="${p?.price_out||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Trạng thái</label><select id="mStatus" class="w-full text-xs"><option value="1" ${p?.status!==false?'selected':''}>Đang bán</option><option value="0" ${p?.status===false?'selected':''}>Ngừng bán</option></select></div>
+</div>`,()=>{
+    const data={name:document.getElementById('mName').value,category_id:+document.getElementById('mCat').value,price_in:+document.getElementById('mPIn').value,price_out:+document.getElementById('mPOut').value,stock:+document.getElementById('mStock').value,status:document.getElementById('mStatus').value==='1'};
+    if(!data.name){showToast('Nhập tên sản phẩm','error');return}
+    if(editId){const i=PRODUCTS_DB.findIndex(x=>x.id===editId);PRODUCTS_DB[i]={...PRODUCTS_DB[i],...data}}
+    else{PRODUCTS_DB.push({id:nextId('products'),...data})}
+    closeModal();renderProductRows();showToast(editId?'Đã cập nhật sản phẩm':'Đã thêm sản phẩm');
+  });
+}
+function deleteProduct(id){
+  if(!confirm('Ngừng bán sản phẩm này?'))return;
+  const i=PRODUCTS_DB.findIndex(x=>x.id===id);
+  if(i>-1){PRODUCTS_DB[i].status=false;renderProductRows();showToast('Đã ngừng bán')}
+}
+
+// ===== CATEGORIES =====
+function renderCategories(c){
+  c.innerHTML=`<div class="fade-in space-y-4">
+<div class="flex justify-between items-center">
+  <h3 class="text-sm text-gray-400">${CATEGORIES_DB.length} danh mục</h3>
+  <button class="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white flex items-center gap-1" onclick="showCatModal()"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm</button>
+</div>
+<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3" id="catGrid"></div></div>`;
+  renderCatGrid();lucide.createIcons();
+}
+function renderCatGrid(){
+  document.getElementById('catGrid').innerHTML=CATEGORIES_DB.map((c,i)=>`
+<div class="rounded-xl p-4 border border-blue-900/30 flex justify-between items-start" style="background:#0d1f3c">
+<div>
+  <h4 class="font-semibold text-white text-sm">${c.name}</h4>
+  <p class="text-xs text-gray-500 mt-1">${c.description}</p>
+  <span class="badge mt-2 inline-block ${c.status?'bg-green-900/40 text-green-400':'bg-gray-700/30 text-gray-500'}">${c.status?'Hoạt động':'Tạm ẩn'}</span>
+</div>
+<div class="flex gap-1">
+  <button class="p-1.5 hover:bg-blue-900/30 rounded-lg" onclick="showCatModal(${i})"><i data-lucide="edit" class="w-3.5 h-3.5 text-blue-400"></i></button>
+  <button class="p-1.5 hover:bg-red-900/20 rounded-lg" onclick="if(confirm('Xóa danh mục?')){CATEGORIES_DB.splice(${i},1);renderCatGrid();showToast('Đã xóa');lucide.createIcons()}"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i></button>
+</div></div>`).join('');
+  lucide.createIcons();
+}
+function showCatModal(editIdx){
+  const c=editIdx!=null?CATEGORIES_DB[editIdx]:null;
+  showModal(c?'Sửa danh mục':'Thêm danh mục',`
+<div class="space-y-3">
+<div><label class="block text-xs text-gray-400 mb-1">Tên</label><input id="catName" value="${c?.name||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Mô tả</label><input id="catDesc" value="${c?.description||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Trạng thái</label><select id="catSt" class="w-full text-xs"><option value="1" ${c?.status!==false?'selected':''}>Hoạt động</option><option value="0" ${c?.status===false?'selected':''}>Tạm ẩn</option></select></div>
+</div>`,()=>{
+    const d={name:document.getElementById('catName').value,description:document.getElementById('catDesc').value,status:document.getElementById('catSt').value==='1'};
+    if(!d.name){showToast('Nhập tên danh mục','error');return}
+    if(editIdx!=null)CATEGORIES_DB[editIdx]={...CATEGORIES_DB[editIdx],...d};
+    else CATEGORIES_DB.push({id:nextId('categories'),...d});
+    closeModal();renderCatGrid();showToast(editIdx!=null?'Đã cập nhật':'Đã thêm danh mục');
+  });
+}
+
+// ===== CUSTOMERS =====
+function renderCustomers(c){
+  c.innerHTML=`<div class="fade-in space-y-4">
+<div class="flex flex-wrap justify-between items-center gap-3">
+  <input type="text" placeholder="Tìm khách hàng..." class="text-xs py-2 px-3 w-48 rounded-lg" oninput="renderCustRows(this.value)">
+  <button class="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white flex items-center gap-1" onclick="showCustModal()"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm KH</button>
+</div>
+<div class="rounded-2xl border border-blue-900/30 overflow-hidden" style="background:#0d1f3c">
+<div class="overflow-x-auto">
+<table><thead><tr><th>Mã KH</th><th>Họ tên</th><th>SĐT</th><th>Địa chỉ</th><th>Đơn hàng</th><th>Tổng mua</th><th>Loại</th><th></th></tr></thead>
+<tbody id="custBody"></tbody></table></div></div></div>`;
+  renderCustRows();lucide.createIcons();
+}
+function renderCustRows(q=''){
+  const f=CUSTOMERS_DB.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.phone.includes(q));
+  document.getElementById('custBody').innerHTML=f.map(c=>`<tr>
+<td class="font-mono text-xs">KH${String(c.id).padStart(3,'0')}</td>
+<td class="font-medium text-white text-xs">${c.name}</td>
+<td class="text-xs">${c.phone}</td>
+<td class="text-xs">${c.address}</td>
+<td class="text-xs text-center">${c.total_orders}</td>
+<td class="text-xs font-semibold">${fmtM(c.total_spent)}đ</td>
+<td>${c.is_vip?'<span class="badge bg-amber-900/40 text-amber-400">⭐ VIP</span>':'<span class="badge bg-gray-700/30 text-gray-500">Thường</span>'}</td>
+<td><div class="flex gap-1">
+  <button class="p-1.5 hover:bg-blue-900/30 rounded-lg" onclick="showCustModal(${c.id})"><i data-lucide="edit" class="w-3.5 h-3.5 text-blue-400"></i></button>
+  <button class="p-1.5 hover:bg-red-900/20 rounded-lg" onclick="deleteCustomer(${c.id})"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i></button>
+</div></td></tr>`).join('');
+  lucide.createIcons();
+}
+function showCustModal(editId){
+  const c=editId?CUSTOMERS_DB.find(x=>x.id===editId):null;
+  showModal(c?'Sửa khách hàng':'Thêm khách hàng',`
+<div class="grid grid-cols-2 gap-3">
+<div><label class="block text-xs text-gray-400 mb-1">Họ tên</label><input id="cuName" value="${c?.name||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">SĐT</label><input id="cuPhone" value="${c?.phone||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Email</label><input id="cuEmail" value="${c?.email||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Địa chỉ</label><input id="cuAddr" value="${c?.address||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Loại KH</label><select id="cuVip" class="w-full text-xs"><option value="0" ${!c?.is_vip?'selected':''}>Thường</option><option value="1" ${c?.is_vip?'selected':''}>VIP</option></select></div>
+</div>`,()=>{
+    const d={name:document.getElementById('cuName').value,phone:document.getElementById('cuPhone').value,email:document.getElementById('cuEmail').value,address:document.getElementById('cuAddr').value,is_vip:document.getElementById('cuVip').value==='1'};
+    if(!d.name){showToast('Nhập họ tên','error');return}
+    if(editId){const i=CUSTOMERS_DB.findIndex(x=>x.id===editId);CUSTOMERS_DB[i]={...CUSTOMERS_DB[i],...d}}
+    else CUSTOMERS_DB.push({id:nextId('customers'),...d,total_orders:0,total_spent:0});
+    closeModal();renderCustRows();showToast(editId?'Đã cập nhật':'Đã thêm khách hàng');
+  });
+}
+function deleteCustomer(id){
+  if(!confirm('Xóa khách hàng này?'))return;
+  CUSTOMERS_DB=CUSTOMERS_DB.filter(c=>c.id!==id);renderCustRows();showToast('Đã xóa khách hàng');
+}
+
+// ===== ORDERS =====
+function renderOrders(c){
+  c.innerHTML=`<div class="fade-in space-y-4">
+<div class="flex flex-wrap justify-between items-center gap-3">
+  <select class="text-xs py-2 px-3 rounded-lg" id="orderFilter" onchange="renderOrderRows()">
+    <option value="">Tất cả</option><option value="done">Hoàn thành</option><option value="pending">Chờ xử lý</option><option value="cancel">Đã hủy</option>
+  </select>
+  <button class="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white flex items-center gap-1" onclick="showOrderModal()"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Tạo đơn</button>
+</div>
+<div class="rounded-2xl border border-blue-900/30 overflow-hidden" style="background:#0d1f3c">
+<div class="overflow-x-auto">
+<table><thead><tr><th>Mã đơn</th><th>Ngày</th><th>Khách hàng</th><th>Nhân viên</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th><th></th></tr></thead>
+<tbody id="orderBody"></tbody></table></div></div></div>`;
+  renderOrderRows();lucide.createIcons();
+}
+function renderOrderRows(){
+  const st=document.getElementById('orderFilter')?.value||'';
+  const f=ORDERS_DB.filter(o=>!st||o.status===st);
+  const stMap={done:{label:'Hoàn thành',cls:'bg-green-900/40 text-green-400'},pending:{label:'Chờ xử lý',cls:'bg-amber-900/40 text-amber-400'},cancel:{label:'Đã hủy',cls:'bg-red-900/30 text-red-400'}};
+  document.getElementById('orderBody').innerHTML=f.map(o=>{
+    const s=stMap[o.status];
+    return`<tr>
+<td class="font-mono text-xs">${o.order_code}</td>
+<td class="text-xs">${o.order_date}</td>
+<td class="text-xs text-white">${getCustomerName(o.customer_id)}</td>
+<td class="text-xs">${getStaffName(o.staff_id)}</td>
+<td class="text-xs">${o.items.map(i=>`${getProductName(i.product_id)} x${i.quantity}`).join(', ')}</td>
+<td class="text-xs font-semibold text-white">${fmtM(o.total_amount)}đ</td>
+<td><span class="badge ${s.cls}">${s.label}</span></td>
+<td><div class="flex gap-1">
+  ${o.status==='pending'?`<button class="text-[10px] px-2 py-1 bg-green-900/30 text-green-400 rounded-lg" onclick="updateOrder(${o.id},'done')">Duyệt</button><button class="text-[10px] px-2 py-1 bg-red-900/20 text-red-400 rounded-lg" onclick="updateOrder(${o.id},'cancel')">Hủy</button>`:''}
+  <button class="p-1.5 hover:bg-blue-900/30 rounded-lg" onclick="showToast('Xuất hóa đơn (demo)')"><i data-lucide="printer" class="w-3.5 h-3.5 text-blue-400"></i></button>
+</div></td></tr>`}).join('');
+  lucide.createIcons();
+}
+function updateOrder(id,status){
+  const o=ORDERS_DB.find(x=>x.id===id);
+  if(o){o.status=status;renderOrderRows();showToast(status==='done'?'Đã duyệt đơn':'Đã hủy đơn')}
+}
+function showOrderModal(){
+  showModal('Tạo đơn hàng mới',`
+<div class="space-y-3">
+<div class="grid grid-cols-2 gap-3">
+<div><label class="block text-xs text-gray-400 mb-1">Khách hàng</label><select id="oCustomer" class="w-full text-xs">${CUSTOMERS_DB.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
+<div><label class="block text-xs text-gray-400 mb-1">Sản phẩm</label><select id="oProduct" class="w-full text-xs">${PRODUCTS_DB.filter(p=>p.status).map(p=>`<option value="${p.id}">${p.name} - ${fmtM(p.price_out)}đ</option>`).join('')}</select></div>
+<div><label class="block text-xs text-gray-400 mb-1">Số lượng</label><input id="oQty" type="number" value="1" min="1" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Giảm giá %</label><input id="oDisc" type="number" value="0" min="0" max="100" class="w-full text-xs"></div>
+</div></div>`,()=>{
+    const prod=PRODUCTS_DB.find(p=>p.id===+document.getElementById('oProduct').value);
+    const qty=+document.getElementById('oQty').value;
+    const disc=+document.getElementById('oDisc').value;
+    const total=prod.price_out*qty*(1-disc/100);
+    const newO={id:nextId('orders'),order_code:'DH'+String(idCounters.orders).padStart(3,'0'),
+      customer_id:+document.getElementById('oCustomer').value,staff_id:STAFF_DB.find(s=>s.user_id===currentUserData.id)?.id||1,
+      order_date:new Date().toISOString().split('T')[0],discount:disc,status:'pending',total_amount:Math.round(total),
+      items:[{product_id:prod.id,quantity:qty,price:prod.price_out}]};
+    ORDERS_DB.unshift(newO);closeModal();renderOrderRows();showToast('Đã tạo đơn hàng');
+  });
+}
+
+// ===== WAREHOUSE =====
+function renderWarehouse(c){
+  const lowStock=PRODUCTS_DB.filter(p=>p.stock<=5&&p.status);
+  const slowSell=PRODUCTS_DB.filter(p=>p.stock>30);
+  c.innerHTML=`<div class="fade-in space-y-4">
+<div class="grid sm:grid-cols-3 gap-4">
+${statCard('📦','Tổng tồn kho',PRODUCTS_DB.reduce((s,p)=>s+p.stock,0)+'','Tất cả sản phẩm','text-blue-400')}
+${statCard('🔴','Sắp hết hàng',lowStock.length+'','Tồn ≤ 5','text-red-400')}
+${statCard('🐌','Bán chậm',slowSell.length+'','Tồn > 30','text-amber-400')}
+</div>
+<div class="grid lg:grid-cols-2 gap-4">
+  <div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-sm font-semibold text-white">⚠️ Hàng sắp hết</h3>
+      <button class="btn-primary px-3 py-1.5 rounded-lg text-[11px] text-white" onclick="showToast('Đã tạo phiếu nhập kho')">+ Nhập kho</button>
+    </div>
+    ${lowStock.length?lowStock.map(p=>`<div class="flex justify-between items-center py-2 border-b border-blue-900/30"><div><span class="text-xs text-white font-medium">${p.name}</span></div><span class="badge bg-red-900/30 text-red-400">${p.stock} còn lại</span></div>`).join(''):'<p class="text-xs text-gray-500">Không có sản phẩm sắp hết</p>'}
+  </div>
+  <div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+    <h3 class="text-sm font-semibold text-white mb-3">Tồn kho theo danh mục</h3>
+    <canvas id="warehouseChart" width="400" height="180" style="width:100%;height:180px"></canvas>
+  </div>
+</div>
+<div class="rounded-2xl border border-blue-900/30 overflow-hidden" style="background:#0d1f3c">
+<div class="p-4 border-b border-blue-900/30 flex justify-between items-center">
+  <h3 class="text-sm font-semibold text-white">Lịch sử xuất nhập kho</h3>
+  <button class="text-xs text-blue-400 hover:underline" onclick="showToast('Kiểm kê kho (demo)')">🔍 Kiểm kê</button>
+</div>
+<table><thead><tr><th>Ngày</th><th>Loại</th><th>Sản phẩm</th><th>SL</th><th>Ghi chú</th></tr></thead><tbody>
+${INVENTORY_LOGS.map(r=>`<tr>
+<td class="text-xs">${r.created_at}</td>
+<td><span class="badge ${r.type==='import'?'bg-green-900/40 text-green-400':'bg-amber-900/40 text-amber-400'}">${r.type==='import'?'Nhập':'Xuất'}</span></td>
+<td class="text-xs">${getProductName(r.product_id)}</td>
+<td class="text-xs text-center">${r.quantity}</td>
+<td class="text-xs text-gray-500">${r.note}</td>
+</tr>`).join('')}
+</tbody></table></div></div>`;
+  // chart by category
+  setTimeout(()=>{
+    const cats=CATEGORIES_DB.filter(c=>c.status);
+    const totals=cats.map(cat=>PRODUCTS_DB.filter(p=>p.category_id===cat.id).reduce((s,p)=>s+p.stock,0));
+    const colors=['#3b82f6','#22c55e','#f59e0b','#a855f7'];
+    drawBarChart('warehouseChart',cats.map(c=>c.name),[{label:'Tồn kho',data:totals,color:'#3b82f6',colorEnd:'#1e3a8a'}],{});
+  },50);
+}
+
+// ===== REVENUE =====
+function renderRevenue(c){
+  const thisM=SALES_SUMMARY[11].revenue, lastM=SALES_SUMMARY[10].revenue;
+  const growth=((thisM-lastM)/lastM*100).toFixed(1);
+  const avg=SALES_SUMMARY.reduce((s,m)=>s+m.revenue,0)/12;
+  c.innerHTML=`<div class="fade-in space-y-4">
+<div class="flex flex-wrap gap-3 mb-1">
+  <select class="text-xs py-1.5 px-3 rounded-lg"><option>Theo tháng</option><option>Theo quý</option><option>Theo năm</option></select>
+  <select class="text-xs py-1.5 px-3 rounded-lg"><option>Tất cả chi nhánh</option><option>HCM</option><option>Hà Nội</option></select>
+</div>
+<div class="grid sm:grid-cols-3 gap-4">
+${statCard('📊','Doanh thu T12',fmtM(thisM)+'đ',`${growth>0?'+':''}${growth}% vs T11`,'text-green-400')}
+${statCard('📈','Doanh thu T11',fmtM(lastM)+'đ','So với T10: +14%','text-blue-400')}
+${statCard('🎯','Trung bình/tháng',fmtM(avg)+'đ','Năm 2025','text-amber-400')}
+</div>
+<div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+  <h3 class="text-sm font-semibold text-white mb-1">Biểu đồ doanh thu theo tháng</h3>
+  <p class="text-[10px] text-blue-400/50 mb-3">Năm 2025 • Đơn vị: VNĐ</p>
+  <canvas id="revChart" width="800" height="220" style="width:100%;height:220px"></canvas>
+</div>
+<div class="grid lg:grid-cols-2 gap-4">
+  <div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+    <h3 class="text-sm font-semibold text-white mb-3">📊 So sánh T11 vs T12 theo danh mục</h3>
+    <canvas id="compareChart" width="400" height="200" style="width:100%;height:200px"></canvas>
+  </div>
+  <div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+    <h3 class="text-sm font-semibold text-white mb-3">🏆 Top sản phẩm</h3>
+    ${[{n:'iPhone 15 Pro Max',r:125e6,q:85},{n:'MacBook Air M3',r:98e6,q:45},{n:'Samsung Galaxy S24',r:78e6,q:62},{n:'iPad Pro',r:56e6,q:28},{n:'AirPods Pro 2',r:34e6,q:38}].map((p,i)=>`
+    <div class="flex items-center gap-3 py-2 ${i<4?'border-b border-blue-900/30':''}">
+      <span class="w-5 h-5 rounded-full ${i<3?'bg-blue-900/60 text-blue-400':'bg-gray-800 text-gray-500'} flex items-center justify-center text-[10px] font-bold">${i+1}</span>
+      <div class="flex-1"><span class="text-xs text-white">${p.n}</span></div>
+      <div class="text-right"><div class="text-xs font-semibold text-white">${fmtM(p.r)}đ</div><div class="text-[10px] text-gray-500">${p.q} đơn</div></div>
+    </div>`).join('')}
+  </div>
+</div></div>`;
+  const MONTHS=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+  setTimeout(()=>{
+    drawBarChart('revChart',MONTHS,[
+      {label:'Doanh thu',data:SALES_SUMMARY.map(m=>m.revenue),color:'#3b82f6',colorEnd:'#1e40af'}
+    ],{});
+    const cats=['Điện thoại','Laptop','Phụ kiện','Đồng hồ'];
+    const t11=[45e6,28e6,15e6,12e6], t12=[52e6,30e6,18e6,10e6];
+    drawBarChart('compareChart',cats,[
+      {label:'T11',data:t11,color:'#1e3a8a',colorEnd:'#0f1f4a'},
+      {label:'T12',data:t12,color:'#3b82f6',colorEnd:'#1e40af'}
+    ],{legend:true});
+  },50);
+}
+
+// ===== FORECAST =====
+function renderForecast(c){
+  const fMonths=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12','T1*','T2*','T3*'];
+  c.innerHTML=`<div class="fade-in space-y-4">
+<div class="flex flex-wrap gap-3 items-center">
+  <div class="flex items-center gap-2 rounded-xl px-4 py-2 border border-emerald-800/40" style="background:#052e16">
+    <i data-lucide="brain" class="w-4 h-4 text-emerald-400"></i>
+    <span class="text-xs font-semibold text-emerald-400">AI Forecast Engine · LSTM</span>
+    <span class="pulse-dot bg-emerald-400"></span>
+  </div>
+</div>
+<div class="grid sm:grid-cols-3 gap-4">
+${statCard('🔮','DT tháng sau dự kiến',fmtM(FORECAST_RESULTS[0].revenue)+'đ','+5.1% so với T12','text-emerald-400')}
+${statCard('📦','SL bán dự kiến','~'+FORECAST_RESULTS[0].quantity+' đơn','+8% so với T12','text-blue-400')}
+${statCard('📈','Xu hướng 3 tháng','Tăng trưởng','+18% dự báo','text-green-400')}
+</div>
+<div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+  <h3 class="text-sm font-semibold text-white mb-1">Biểu đồ dự báo doanh thu</h3>
+  <p class="text-[10px] text-blue-400/50 mb-3">Thực tế (T1–T12) + Dự báo AI (T1*–T3*)</p>
+  <canvas id="forecastChart" width="900" height="230" style="width:100%;height:230px"></canvas>
+</div>
+<div class="grid lg:grid-cols-2 gap-4">
+  <div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+    <h3 class="text-sm font-semibold text-white mb-3">💡 Gợi ý từ AI</h3>
+    <div class="space-y-3">
+      ${[{icon:'📦',title:'Nhập thêm AirPods Pro 2',desc:'Tồn kho chỉ còn 3, dự kiến bán 15 trong tháng tới',c:'amber'},{icon:'🔥',title:'iPhone 15 tiếp tục hot',desc:'Nhu cầu tăng 12%, nên duy trì tồn kho ≥ 40',c:'blue'},{icon:'⚠️',title:'Đồng hồ thông minh giảm',desc:'DT giảm 8% 2 tháng liên tiếp, cân nhắc giảm nhập',c:'red'}].map(g=>`
+      <div class="flex gap-3 p-3 rounded-xl border" style="background:#060d1a;border-color:rgba(30,64,128,0.3)">
+        <span class="text-lg">${g.icon}</span>
+        <div><h4 class="text-xs font-semibold text-white">${g.title}</h4><p class="text-[11px] text-gray-500 mt-0.5">${g.desc}</p></div>
+      </div>`).join('')}
+    </div>
+  </div>
+  <div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+    <h3 class="text-sm font-semibold text-white mb-3">📊 Dự báo theo danh mục</h3>
+    ${[{n:'Điện thoại',cur:180,next:195,pct:8.3},{n:'Laptop',cur:95,next:105,pct:10.5},{n:'Phụ kiện',cur:55,next:62,pct:12.7},{n:'Tablet',cur:40,next:35,pct:-12.5},{n:'Đồng hồ',cur:30,next:28,pct:-6.7}].map(d=>`
+    <div class="flex items-center gap-3 mb-3">
+      <span class="text-xs text-gray-400 w-20">${d.n}</span>
+      <div class="flex-1 h-2.5 bg-blue-950 rounded-full overflow-hidden">
+        <div class="h-full ${d.pct>0?'bg-emerald-500':'bg-red-500'} rounded-full" style="width:${Math.min(d.next/200*100,100)}%"></div>
+      </div>
+      <span class="text-xs ${d.pct>0?'text-emerald-400':'text-red-400'} w-14 text-right">${d.pct>0?'+':''}${d.pct}%</span>
+    </div>`).join('')}
+  </div>
+</div></div>`;
+  lucide.createIcons();
+  setTimeout(()=>{
+    const actuals=SALES_SUMMARY.map(m=>m.revenue);
+    const forecasts=[...Array(12).fill(null),...FORECAST_RESULTS.map(f=>f.revenue)];
+    drawLineChart('forecastChart',fMonths,[
+      {label:'Thực tế',data:[...actuals,...Array(3).fill(null)],color:'#3b82f6',fill:'rgba(37,99,235,0.08)'},
+      {label:'Dự báo AI',data:forecasts,color:'#34d399',fill:'rgba(52,211,153,0.06)',dashed:true}
+    ]);
+  },50);
+}
+
+// ===== STAFF =====
+function renderStaff(c){
+  c.innerHTML=`<div class="fade-in space-y-4">
+<div class="flex justify-between items-center">
+  <h3 class="text-sm text-gray-400">${STAFF_DB.length} nhân viên</h3>
+  <button class="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white flex items-center gap-1" onclick="showStaffModal()"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm NV</button>
+</div>
+<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">${STAFF_DB.map(s=>`
+<div class="rounded-2xl p-4 border border-blue-900/30 text-center" style="background:#0d1f3c">
+  <div class="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-lg font-bold ${s.active?'text-white':'text-gray-500'}" style="background:${s.active?'linear-gradient(135deg,#1e40af,#1e3a8a)':'#132847'}">${s.name[0]}</div>
+  <h4 class="text-sm font-semibold text-white">${s.name}</h4>
+  <p class="text-[11px] text-gray-500">${s.email}</p>
+  <div class="flex justify-center gap-2 mt-2">
+    <span class="badge bg-blue-900/40 text-blue-300">${s.role}</span>
+    <span class="badge ${s.active?'bg-green-900/40 text-green-400':'bg-red-900/30 text-red-400'}">${s.active?'Active':'Khóa'}</span>
+  </div>
+  <p class="text-[10px] text-gray-500 mt-1">Chi nhánh: ${s.branch}</p>
+  <div class="flex justify-center gap-1 mt-3">
+    <button class="p-1.5 hover:bg-blue-900/30 rounded-lg" onclick="showStaffModal(${s.id})"><i data-lucide="edit" class="w-3.5 h-3.5 text-blue-400"></i></button>
+    <button class="p-1.5 hover:bg-amber-900/20 rounded-lg" onclick="toggleStaff(${s.id})"><i data-lucide="${s.active?'lock':'unlock'}" class="w-3.5 h-3.5 text-amber-400"></i></button>
+    <button class="p-1.5 hover:bg-red-900/20 rounded-lg" onclick="deleteStaff(${s.id})"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i></button>
+  </div>
+</div>`).join('')}</div></div>`;
+  lucide.createIcons();
+}
+function toggleStaff(id){const s=STAFF_DB.find(x=>x.id===id);if(s){s.active=!s.active;renderStaff(document.getElementById('pageContent'));showToast(s.active?'Đã mở khóa tài khoản':'Đã khóa tài khoản')}}
+function deleteStaff(id){if(!confirm('Xóa nhân viên này?'))return;STAFF_DB=STAFF_DB.filter(s=>s.id!==id);renderStaff(document.getElementById('pageContent'));showToast('Đã xóa nhân viên')}
+function showStaffModal(editId){
+  const s=editId?STAFF_DB.find(x=>x.id===editId):null;
+  showModal(s?'Sửa nhân viên':'Thêm nhân viên',`
+<div class="grid grid-cols-2 gap-3">
+<div><label class="block text-xs text-gray-400 mb-1">Họ tên</label><input id="stName" value="${s?.name||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Email</label><input id="stEmail" value="${s?.email||''}" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Chức vụ</label><select id="stRole" class="w-full text-xs"><option ${s?.role==='Admin'?'selected':''}>Admin</option><option ${s?.role==='Quản lý'?'selected':''}>Quản lý</option><option ${!s||s?.role==='Nhân viên'?'selected':''}>Nhân viên</option></select></div>
+<div><label class="block text-xs text-gray-400 mb-1">Chi nhánh</label><select id="stBranch" class="w-full text-xs"><option ${s?.branch==='HCM'?'selected':''}>HCM</option><option ${s?.branch==='HN'?'selected':''}>HN</option></select></div>
+</div>`,()=>{
+    const d={name:document.getElementById('stName').value,email:document.getElementById('stEmail').value,role:document.getElementById('stRole').value,branch:document.getElementById('stBranch').value};
+    if(!d.name){showToast('Nhập họ tên','error');return}
+    if(editId){const i=STAFF_DB.findIndex(x=>x.id===editId);STAFF_DB[i]={...STAFF_DB[i],...d}}
+    else STAFF_DB.push({id:nextId('staff'),user_id:null,...d,active:true});
+    closeModal();renderStaff(document.getElementById('pageContent'));showToast(editId?'Đã cập nhật':'Đã thêm nhân viên');
+  });
+}
+
+// ===== ACCOUNTS (CRUD đầy đủ) =====
+function renderAccounts(c){
+  c.innerHTML=`<div class="fade-in space-y-4">
+<div class="flex justify-between items-center">
+  <h3 class="text-sm text-gray-400">Quản lý tài khoản &amp; phân quyền hệ thống</h3>
+  <button class="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white flex items-center gap-1" onclick="showAccountModal()"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Tạo TK</button>
+</div>
+<div class="rounded-2xl border border-blue-900/30 overflow-hidden" style="background:#0d1f3c">
+<div class="overflow-x-auto">
+<table><thead><tr><th>Username</th><th>Họ tên NV</th><th>Vai trò</th><th>Chi nhánh</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+<tbody id="accBody"></tbody></table></div></div>
+
+<div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+<h3 class="text-sm font-semibold text-white mb-3">📋 Nhật ký đăng nhập</h3>
+${[{u:'admin',t:'2025-01-18 08:30',ip:'192.168.1.1',action:'Đăng nhập thành công'},{u:'nv',t:'2025-01-18 09:15',ip:'192.168.1.5',action:'Đăng nhập thành công'},{u:'ql',t:'2025-01-17 14:20',ip:'192.168.1.3',action:'Đăng nhập thành công'},{u:'admin',t:'2025-01-17 08:00',ip:'192.168.1.1',action:'Đổi mật khẩu'}].map(l=>`
+<div class="flex justify-between items-center py-2 border-b border-blue-900/30 last:border-0">
+  <div class="flex items-center gap-2"><span class="badge bg-blue-900/40 text-blue-300">${l.u}</span><span class="text-xs text-gray-400">${l.t}</span><span class="text-xs text-gray-600">${l.action}</span></div>
+  <span class="text-[10px] text-gray-600">${l.ip}</span>
+</div>`).join('')}
+</div></div>`;
+  renderAccountRows();lucide.createIcons();
+}
+function renderAccountRows(){
+  const roleMap={admin:{label:'Admin',cls:'bg-blue-900/40 text-blue-300'},manager:{label:'Quản lý',cls:'bg-purple-900/40 text-purple-300'},staff:{label:'Nhân viên',cls:'bg-gray-700/40 text-gray-400'}};
+  document.getElementById('accBody').innerHTML=Object.entries(USERS_DB).map(([u,d])=>{
+    const staff=STAFF_DB.find(s=>s.user_id===d.id);
+    const r=roleMap[d.role]||roleMap.staff;
+    return`<tr>
+<td class="font-mono text-xs font-semibold text-blue-300">${u}</td>
+<td class="text-xs text-white">${staff?.name||d.username}</td>
+<td><span class="badge ${r.cls}">${r.label}</span></td>
+<td class="text-xs">${staff?.branch||'—'}</td>
+<td><span class="badge bg-green-900/40 text-green-400">Active</span></td>
+<td><div class="flex gap-1">
+  <button class="text-[10px] px-2 py-1 bg-blue-900/30 text-blue-400 rounded-lg" onclick="showAccountModal('${u}')"><i data-lucide="edit" class="w-3 h-3 inline mr-0.5"></i>Sửa</button>
+  <button class="text-[10px] px-2 py-1 bg-amber-900/20 text-amber-400 rounded-lg" onclick="resetPassword('${u}')">Reset MK</button>
+  ${u!=='admin'?`<button class="text-[10px] px-2 py-1 bg-red-900/20 text-red-400 rounded-lg" onclick="deleteAccount('${u}')">Xóa</button>`:''}
+</div></td></tr>`}).join('');
+  lucide.createIcons();
+}
+function showAccountModal(editUsername){
+  const u=editUsername?USERS_DB[editUsername]:null;
+  const linkedStaff=u?STAFF_DB.find(s=>s.user_id===u.id):null;
+  showModal(u?'Sửa tài khoản':'Tạo tài khoản mới',`
+<div class="grid grid-cols-2 gap-3">
+<div><label class="block text-xs text-gray-400 mb-1">Username</label><input id="auUser" value="${editUsername||''}" class="w-full text-xs" ${editUsername?'disabled':''}></div>
+<div><label class="block text-xs text-gray-400 mb-1">Vai trò</label><select id="auRole" class="w-full text-xs">
+  <option value="admin" ${u?.role==='admin'?'selected':''}>Admin</option>
+  <option value="manager" ${u?.role==='manager'?'selected':''}>Quản lý</option>
+  <option value="staff" ${!u||u?.role==='staff'?'selected':''}>Nhân viên</option>
+</select></div>
+${!editUsername?`<div class="col-span-2"><label class="block text-xs text-gray-400 mb-1">Mật khẩu</label><input id="auPass" type="password" placeholder="Mật khẩu mới" class="w-full text-xs"></div>`:''}
+<div class="col-span-2"><label class="block text-xs text-gray-400 mb-1">Liên kết nhân viên</label><select id="auStaff" class="w-full text-xs">
+  <option value="">— Chưa liên kết —</option>
+  ${STAFF_DB.map(s=>`<option value="${s.id}" ${linkedStaff?.id===s.id?'selected':''}>${s.name} (${s.branch})</option>`).join('')}
+</select></div>
+</div>`,()=>{
+    const username=editUsername||document.getElementById('auUser').value.trim();
+    const role=document.getElementById('auRole').value;
+    const staffId=document.getElementById('auStaff').value;
+    const roleNames={admin:'Quản trị viên',manager:'Quản lý',staff:'Nhân viên'};
+    if(!username){showToast('Nhập username','error');return}
+    if(editUsername){
+      USERS_DB[editUsername].role=role;USERS_DB[editUsername].roleName=roleNames[role];
+    } else {
+      const pass=document.getElementById('auPass').value||'123456';
+      USERS_DB[username]={id:nextId('users'),username,password:pass,role,roleName:roleNames[role]};
+    }
+    // link staff
+    if(staffId){
+      STAFF_DB.forEach(s=>{if(s.user_id===USERS_DB[username].id)s.user_id=null});
+      const s=STAFF_DB.find(x=>x.id===+staffId);if(s)s.user_id=USERS_DB[username].id;
+    }
+    closeModal();renderAccountRows();showToast(editUsername?'Đã cập nhật tài khoản':'Đã tạo tài khoản mới');
+  });
+}
+function resetPassword(username){
+  showModal('Đặt lại mật khẩu',`
+<div><label class="block text-xs text-gray-400 mb-1">Mật khẩu mới cho <strong>${username}</strong></label><input id="rpPass" type="password" placeholder="Nhập mật khẩu mới" class="w-full text-xs"></div>
+<div class="mt-2"><input id="rpPass2" type="password" placeholder="Xác nhận mật khẩu" class="w-full text-xs"></div>`,()=>{
+    const p1=document.getElementById('rpPass').value, p2=document.getElementById('rpPass2').value;
+    if(!p1){showToast('Nhập mật khẩu','error');return}
+    if(p1!==p2){showToast('Mật khẩu không khớp','error');return}
+    USERS_DB[username].password=p1;closeModal();showToast('Đã đặt lại mật khẩu thành công');
+  });
+}
+function deleteAccount(username){
+  if(!confirm(`Xóa tài khoản "${username}"?`))return;
+  delete USERS_DB[username];renderAccountRows();showToast('Đã xóa tài khoản');
+}
+
+// ===== SETTINGS =====
+function renderSettings(c){
+  c.innerHTML=`<div class="fade-in space-y-4">
+<div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+<h3 class="text-sm font-semibold text-white mb-4">🏢 Thông tin công ty</h3>
+<div class="grid sm:grid-cols-2 gap-3">
+<div><label class="block text-xs text-gray-400 mb-1">Tên công ty</label><input value="UpScale Analytics" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Mã số thuế</label><input value="0123456789" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">Địa chỉ</label><input value="123 Nguyễn Huệ, Q1, TP.HCM" class="w-full text-xs"></div>
+<div><label class="block text-xs text-gray-400 mb-1">SĐT</label><input value="028-1234-5678" class="w-full text-xs"></div>
+</div>
+</div>
+<div class="grid sm:grid-cols-2 gap-4">
+<div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+<h3 class="text-sm font-semibold text-white mb-3">💰 Thuế &amp; VAT</h3>
+<div class="space-y-3">
+<div><label class="block text-xs text-gray-400 mb-1">Thuế VAT (%)</label><input type="number" value="10" class="w-full text-xs"></div>
+<label class="flex items-center gap-2 text-xs text-gray-400 cursor-pointer"><input type="checkbox" checked class="accent-blue-500"> Tự động tính VAT</label>
+</div>
+</div>
+<div class="rounded-2xl p-5 border border-blue-900/30" style="background:#0d1f3c">
+<h3 class="text-sm font-semibold text-white mb-3">🎨 Giao diện</h3>
+<div class="space-y-3">
+<div><label class="block text-xs text-gray-400 mb-1">Theme</label><select class="w-full text-xs"><option>Dark Navy (mặc định)</option><option>Dark Pure</option></select></div>
+<label class="flex items-center gap-2 text-xs text-gray-400 cursor-pointer"><input type="checkbox" checked class="accent-blue-500"> Hiệu ứng animation</label>
+</div>
+</div>
+</div>
+<button class="btn-primary px-6 py-2.5 rounded-xl text-white text-sm font-semibold" onclick="showToast('Đã lưu cài đặt')">💾 Lưu cài đặt</button>
+</div>`;
+}
+
+// ===== MODAL =====
+function showModal(title,body,onSave){
+  let m=document.getElementById('globalModal');
+  if(!m){m=document.createElement('div');m.id='globalModal';document.body.appendChild(m)}
+  m.innerHTML=`<div class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+<div class="rounded-2xl border border-blue-900/40 w-full max-w-lg shadow-2xl fade-in" style="background:#0d1f3c">
+<div class="flex justify-between items-center p-4 border-b border-blue-900/30">
+  <h3 class="text-sm font-semibold text-white">${title}</h3>
+  <button onclick="closeModal()" class="p-1 hover:bg-blue-900/30 rounded-lg"><i data-lucide="x" class="w-4 h-4"></i></button>
+</div>
+<div class="p-4">${body}</div>
+<div class="flex justify-end gap-2 p-4 border-t border-blue-900/30">
+  <button onclick="closeModal()" class="px-4 py-2 rounded-lg text-xs text-gray-400 hover:bg-blue-900/20 transition">Hủy</button>
+  <button id="modalSaveBtn" class="btn-primary px-4 py-2 rounded-lg text-xs text-white font-semibold">Lưu</button>
+</div></div></div>`;
+  document.getElementById('modalSaveBtn').onclick=onSave;
+  m.style.display='block';lucide.createIcons();
+}
+function closeModal(){const m=document.getElementById('globalModal');if(m)m.style.display='none'}
+
+// Init
+lucide.createIcons();
+document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+</script>
+</body>
+</html>
